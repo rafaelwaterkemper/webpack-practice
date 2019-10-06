@@ -1,5 +1,8 @@
 var path = require('path');
 
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+
 module.exports = {
     entry: './app-src/app.js',
     output: {
@@ -19,8 +22,16 @@ module.exports = {
             {
                 test: /\.css$/,
                 use: [
-                    { loader: 'style-loader' },
-                    { loader: 'css-loader' }
+                    {
+                        loader: MiniCssExtractPlugin.loader,
+                        options: {
+                            // you can specify a publicPath here
+                            // by default it uses publicPath in webpackOptions.output
+                            // publicPath: '../',
+                            hmr: process.env.NODE_ENV === 'development',
+                        },
+                    },
+                    'css-loader'
                 ]
             },
             {
@@ -48,5 +59,22 @@ module.exports = {
                 }
             }
         ]
-    }
+    },
+    plugins: [
+        new MiniCssExtractPlugin({
+            // Options similar to the same options in webpackOptions.output
+            // all options are optional
+            filename: '[name].css',
+            chunkFilename: '[id].css',
+            ignoreOrder: false // Enable to remove warnings about conflicting order
+        }),
+        new OptimizeCssAssetsPlugin({
+            assetNameRegExp: /\main\.css$/g,
+            cssProcessor: require('cssnano'),
+            cssProcessorPluginOptions: {
+              preset: ['default', { discardComments: { removeAll: true } }],
+            },
+            canPrint: true
+          })
+    ]
 }
