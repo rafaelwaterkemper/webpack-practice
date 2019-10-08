@@ -1,14 +1,29 @@
 var path = require('path');
 
+let SERVICE_URL = JSON.stringify('http://localhost:3000');
+
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+
+const webpack = require('webpack');
 
 module.exports = {
     entry: './app-src/app.js',
     output: {
         filename: 'bundle.js',
         path: path.resolve(__dirname, 'dist'),
-        publicPath: 'dist'
+    },
+    optimization: {
+        splitChunks: {
+            cacheGroups: {
+                vendor: {
+                    test: /[\\/]node_modules[\\/](jquery|bootstrap)[\\/]/,
+                    name: 'vendor',
+                    chunks: 'all',
+                }
+            }
+        }
     },
     module: {
         rules: [
@@ -72,9 +87,25 @@ module.exports = {
             assetNameRegExp: /\main\.css$/g,
             cssProcessor: require('cssnano'),
             cssProcessorPluginOptions: {
-              preset: ['default', { discardComments: { removeAll: true } }],
+                preset: ['default', { discardComments: { removeAll: true } }],
             },
             canPrint: true
-          })
+        }),
+        new HtmlWebpackPlugin({
+            hash: true,
+            filename: 'index.html',
+            template: './index.html',
+            minify: {
+                html5: true,
+                removeComments: true
+            }
+        }),
+        new webpack.ProvidePlugin({
+            '$': 'jquery/dist/jquery.js',
+            'jQuery': 'jquery/dist/jquery.js'
+       }),
+       new webpack.DefinePlugin({
+           SERVICE_URL
+       })
     ]
 }
